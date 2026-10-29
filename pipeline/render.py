@@ -24,8 +24,8 @@ def pct(a, b):
     return f"{a / b * 100:.1f}%".replace(".0%", "%") if b else "0%"
 
 
-def build(files, label="Oct", period="1–28 Oct"):
-    d, stats, g, f = compute.main(files)
+def build(files, start, end, label, period):
+    d, stats, g, f = compute.main(files, start, (pd.Timestamp(end) + pd.Timedelta(days=1)).strftime("%Y-%m-%d"))
     live = [b for b in g.index if b != compute.CFG["other_label"] and g.loc[b, "leads"] > 0]
     n = f["leads"]
     rows = [
@@ -84,7 +84,7 @@ tr.tot td{{font-weight:700}}
 </div></body></html>"""
 
 
-def write_excel(path, d, stats, g, f, rows, period):
+def write_excel(path, d, stats, g, f, rows, period, year=""):
     with pd.ExcelWriter(path) as w:
         t = g.reset_index().rename(columns={"brand": "Brand", "leads": "Leads", "assigned": "Assigned",
                                             "quality": "Quality Pipeline", "sched": "Meetings Scheduled",
@@ -98,7 +98,7 @@ def write_excel(path, d, stats, g, f, rows, period):
         s.columns = ["Mapped brand", "Raw Brand value", "Leads"]
         s.to_excel(w, sheet_name="Brand mapping used", index=False)
         pd.DataFrame({"Note": [
-            "Period: Created On 1 Oct 00:00 to 28 Oct 23:59:59 2026; both exports combined; de-duplicated on Lead id.",
+            f"Period: Created On {period} ({year}); both exports combined; de-duplicated on Lead id.",
             "Counts are lead records (TeleCRM rows), not unique phone numbers; some phones appear in several leads/brands.",
             "Any Brand starting FW_/FW- is the separate FW (Franchise World) brand.",
             "Kabego Rental counted under EBG Rental; Realty and blank brands under Other / Unmapped.",
@@ -108,18 +108,21 @@ def write_excel(path, d, stats, g, f, rows, period):
         d["Status"].value_counts().rename_axis("Status").reset_index(name="Leads").to_excel(w, sheet_name="Status counts", index=False)
 
 
-def main():
-    files = sorted((ROOT / "inbox" / "2026-10" / "raw").glob("*.csv"))
-    d, stats, g, f, live, rows, period = build(files)
-    OUT.mkdir(exist_ok=True)
+def make(files, start, end, outdir=None):
+    """Build HTML, PNG and backing workbook for start..end (inclusive ISO dates). Returns result dict."""
+    s0, e0 = pd.Timestamp(start), pd.Timestamp(end)
+    label = s0.strftime("%b")
+    period = f"{s0.day}\u2013{e0.day} {label}" if s0.month == e0.month else f"{s0.day} {s0.strftime('%b')}\u2013{e0.day} {e0.strftime('%b')}"
+    tag = f"{label}{s0.year}"
+    out = Path(outdir) if outdir else OUT / s0.strftime("%Y-%m")
+    out.mkdir(parents=True, exist_ok=True)
+    d, stats, g, f, live, rows, period = build(files, start, end, label, period)
     page = to_html(g, f, live, rows, period)
-    (OUT / "Monthly_Lead_Report_Oct2026.html").write_text(page)
-    write_excel(OUT / "Monthly_Lead_Report_Oct2026_backing.xlsx", d, stats, g, f, rows, period)
+    html_p, png_p, xl_p = (out / f"Monthly_Lead_Report_{tag}{x}" for x in (".html", ".png", "_backing.xlsx"))
+    html_p.write_text(page)
+    write_excel(xl_p, d, stats, g, f, rows, period, s0.year)
     import subprocess
-    subprocess.run(["node", str(ROOT / "pipeline" / "screenshot.js"), str(OUT / "Monthly_Lead_Report_Oct2026.html"),
-                    str(OUT / "Monthly_Lead_Report_Oct2026.png")], check=True)
-    print("done", stats, len(live))
-
-
-if __name__ == "__main__":
-    main()
+    subprocess.run(["node", str(ROOT / "pipeline" / "screenshot.js"), str(html_p), str(png_p)], check=True)
+    other = d[d["brand"] == compute.CFG["other_label"]]["Brand"].value_counts().to_dict()
+    return {"png": png_p, "xlsx": xl_p, "html": html_p, "stats": stats, "funnel": f,
+            "brands": g, "live": len(live), "unmapped_brand_values": other}
