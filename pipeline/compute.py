@@ -51,8 +51,9 @@ def compute(d):
     g = g.reindex([b for b in order if b in g.index])
     funnel = {
         "leads": n,
-        "worked": int((st != "New Lead").sum()),
+        "worked": int((~st.isin(["New Lead", "Assigned"])).sum()),
         "new_lead": int((st == "New Lead").sum()),
+        "assigned_status_not_worked": int((st == "Assigned").sum()),
         "connected": int((st == "Connected").sum()),
         "quality": int(quality.sum()),
         "details_shared": int((st == "Details Shared").sum()),

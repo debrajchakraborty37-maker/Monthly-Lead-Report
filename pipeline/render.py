@@ -66,7 +66,7 @@ h2{{margin:0 0 0;font-size:34px;color:#0d1b3d;font-weight:700;padding:4px 0 10px
 .tiles{{display:flex;gap:16px;margin:12px 0 17px}}
 .tile{{flex:1;background:#fff;border:2px solid #dcdcdc;border-radius:10px;padding:16px 20px 12px;height:136px;box-shadow:0 1px 3px #0002}}
 .tile .l{{font-size:20px;font-weight:700;color:#5b6577}}.tile .v{{font-size:38px;font-weight:700;color:#0d1b3d;margin-top:22px}}
-.tile .v.g{{color:#1e7b34}}.tile .v.sm{{font-size:21px;margin-top:30px}}
+.tile .v.g{{color:#1e7b34}}.tile .v.sm{{font-size:19px;margin-top:30px;white-space:nowrap}}
 table{{border-collapse:collapse;background:#fff;width:100%;font-size:17px}}
 td{{border:1px solid #d0d0d0;padding:10px 8px;vertical-align:middle;line-height:20px}}
 .left tr:first-child td{{font-weight:700;color:#0d1b3d}}
@@ -77,7 +77,7 @@ tr.tot td{{font-weight:700}}
 <div class="left"><h2>Lead delivery by brand</h2>
 <div class="tiles"><div class="tile"><div class="l">Brands Live</div><div class="v">{len(live)}</div></div>
 <div class="tile"><div class="l">Leads in CRM</div><div class="v">{f['leads']:,}</div></div>
-<div class="tile"><div class="l">Direct LP Meetings</div><div class="v g sm">N/A</div></div></div>
+<div class="tile"><div class="l">Direct LP Meetings</div><div class="v g sm">Data Not Available</div></div></div>
 <table><tr><td>Brand ({period})</td><td>Assigned</td><td>Quality Pipeline</td><td>Meetings Sch / Held</td></tr>{brand_rows}</table></div>
 <div class="right"><h2>Activity and conversion funnel</h2>
 <table><tr><td>Metric</td><td>Count</td><td>Conversion / Comment</td></tr>{fun_rows}</table></div>
@@ -97,6 +97,14 @@ def write_excel(path, d, stats, g, f, rows, period):
         s = d.groupby(["brand", "Brand"]).size().rename("Leads").reset_index()
         s.columns = ["Mapped brand", "Raw Brand value", "Leads"]
         s.to_excel(w, sheet_name="Brand mapping used", index=False)
+        pd.DataFrame({"Note": [
+            "Period: Created On 1 Oct 00:00 to 28 Oct 23:59:59 2026; both exports combined; de-duplicated on Lead id.",
+            "Counts are lead records (TeleCRM rows), not unique phone numbers; some phones appear in several leads/brands.",
+            "Any Brand starting FW_/FW- is the separate FW (Franchise World) brand.",
+            "Kabego Rental counted under EBG Rental; Realty and blank brands under Other / Unmapped.",
+            "Worked = all statuses except New Lead and Assigned. Quality Pipeline = Qualified, Details Shared, Meeting Scheduled/Conducted, Negotiation, Token Received.",
+            "Won = Token Received (CRM has no Won status). Direct LP Meetings and MIB Closures are not in the exports.",
+        ]}).to_excel(w, sheet_name="Notes", index=False)
         d["Status"].value_counts().rename_axis("Status").reset_index(name="Leads").to_excel(w, sheet_name="Status counts", index=False)
 
 
