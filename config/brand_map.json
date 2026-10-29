@@ -1,0 +1,30 @@
+{
+  "fw_prefixes": ["fw_", "fw-"],
+  "rules": [
+    ["daewoo", "Daewoo"],
+    ["tarzan", "Tarzan"],
+    ["adhira", "Adhira & Appa Coffee"],
+    ["ageon", "Ageon"],
+    ["bonum", "Bonum Cha"],
+    ["fractro", "Fractro"],
+    ["nativetouch", "Native Touch"],
+    ["nonstop", "Nonstop (Physio)"],
+    ["shayreen", "Shayreen"],
+    ["natuf", "Natuf"],
+    ["acer", "Acer"],
+    ["carlton", "Carlton"],
+    ["carlon", "Carlton"],
+    ["chhota", "Chhota Bheem"],
+    ["ebg", "EBG Rental"],
+    ["kabego", "EBG Rental"],
+    ["govintham", "Govintham"]
+  ],
+  "fw_label": "FW",
+  "other_label": "Other / Unmapped",
+  "brand_order": ["Daewoo", "Tarzan", "Adhira & Appa Coffee", "Ageon", "Bonum Cha", "Fractro", "Native Touch", "FW", "Nonstop (Physio)", "Shayreen", "Natuf", "Acer", "Carlton", "Chhota Bheem", "EBG Rental", "Govintham"],
+  "quality_statuses": ["Qualified", "Details Shared", "Meeting Scheduled", "Meeting Conducted", "Meeting Conducted but NOT QUALIFIED", "Negotiation", "Token Received", "Token Recieved"],
+  "scheduled_statuses": ["Meeting Scheduled", "Meeting Conducted", "Meeting Conducted but NOT QUALIFIED"],
+  "held_statuses": ["Meeting Conducted", "Meeting Conducted but NOT QUALIFIED"],
+  "won_statuses": ["Token Received", "Token Recieved"],
+  "lost_statuses": ["Lost", "Reasons for Lost"]
+}
